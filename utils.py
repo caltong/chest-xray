@@ -35,8 +35,8 @@ class ChestXrayDataset(Dataset):
 
         label = self.labels_frame.iloc[idx, 1]
         label = np.array(label)
-        sample = (image, label)
-
+        # sample = (image, label)
+        sample = (Image.fromarray(image, mode='RGB'), label)
         if self.transform:
             sample = self.transform(sample)
         return sample
@@ -49,9 +49,9 @@ class LeftToRightFlip(object):
     def __call__(self, sample):
         image, label = sample
         if random.random() < self.p:
-            image = Image.fromarray(image, mode='RGB')
+            # image = Image.fromarray(image, mode='RGB')
             image = F.hflip(image)
-            image = np.array(image)
+            # image = np.array(image)
         return image, label
 
 
@@ -63,13 +63,13 @@ class RandomRotation(object):
     def __call__(self, sample):
         image, label = sample
         if random.random() < self.p:
-            image = Image.fromarray(image, mode='RGB')
+            # image = Image.fromarray(image, mode='RGB')
             random_angle = random.random() * self.angle
             crop_width = int(image.size[0] / (1 + math.tan(math.radians(random_angle))) \
                              / math.cos(math.radians(random_angle)))
             image = image.rotate(random_angle, expand=1)
             image = F.center_crop(image, crop_width)
-            image = np.array(image)
+            # image = np.array(image)
         return image, label
 
 
@@ -85,12 +85,12 @@ class ColorJitter(object):
         image, label = sample
         if random.random() > self.p:
             return image, label
-        image = Image.fromarray(image, mode='RGB')
+        # image = Image.fromarray(image, mode='RGB')
         image = ImageEnhance.Color(image).enhance((random.random() + 0.5) * self.color)
         image = ImageEnhance.Contrast(image).enhance((random.random() + 0.5) * self.contrast)
         image = ImageEnhance.Brightness(image).enhance((random.random() + 0.5) * self.brightness)
         image = ImageEnhance.Sharpness(image).enhance((random.random() + 0.5) * self.sharpness)
-        image = np.array(image)
+        # image = np.array(image)
         return image, label
 
 
@@ -105,6 +105,7 @@ class RandomCrop(object):
         if random.random() > self.p:
             return image, label
 
+        image = np.array(image)
         origin_width = image.shape[0]
         if origin_width < self.scale:
             raise TypeError('scale should be smaller than origin width')
@@ -113,9 +114,9 @@ class RandomCrop(object):
         random_start_left = random.randint(0, origin_width - random_scale)
         random_start_right = random.randint(0, origin_width - random_scale)
         new_image = image[random_start_left:random_start_left + random_scale,
-                    random_start_right:random_start_right + random_scale,
-                    :]
-
+                          random_start_right:random_start_right + random_scale,
+                          :]
+        new_image = Image.fromarray(new_image, mode='RGB')
         return new_image, label
 
 
@@ -125,15 +126,17 @@ class Resize(object):
 
     def __call__(self, sample):
         image, label = sample
-        image = Image.fromarray(image, mode='RGB')
+        # image = Image.fromarray(image, mode='RGB')
         image = image.resize((self.scale, self.scale), resample=Image.LANCZOS)
-        image = np.array(image)
+        # image = image.resize((self.scale, self.scale))
+        # image = np.array(image)
         return image, label
 
 
 class ToTensor(object):
     def __call__(self, sample):
         image, label = sample
+        image = np.array(image)
         image = image.transpose((2, 0, 1))
         return (torch.from_numpy(image).type(torch.cuda.FloatTensor),
                 torch.from_numpy(label).type(torch.cuda.LongTensor))
