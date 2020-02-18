@@ -11,6 +11,8 @@ from PIL import Image, ImageEnhance
 import numpy as np
 from torchvision.transforms import functional as F
 
+import torch
+
 
 class ChestXrayDataset(Dataset):
     def __init__(self, csv_file, root_dir, transform=None):

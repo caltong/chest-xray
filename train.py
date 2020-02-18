@@ -14,6 +14,8 @@ from torch.utils.data import DataLoader
 import torch
 import torch.nn as nn
 
+from focal_loss import FocalLoss
+
 transform = {'train': transforms.Compose([LeftToRightFlip(0.5),
                                           RandomRotation(angle=3, p=0.5),
                                           Resize(224),
@@ -106,7 +108,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     return model
 
 
-model_ft = models.resnext101_32x8d(pretrained=True)
+model_ft = models.resnet101(pretrained=True)
 num_ftrs = model_ft.fc.in_features
 # Here the size of each output sample is set to 2.
 # Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
@@ -116,13 +118,14 @@ model_ft.fc = nn.Linear(num_ftrs, 4)
 model_ft = nn.DataParallel(model_ft)  # 多卡训练
 model_ft = model_ft.cuda()
 
-criterion = nn.CrossEntropyLoss()
+# criterion = nn.CrossEntropyLoss()
+criterion = FocalLoss()
 
 # Observe that all parameters are being optimized
-optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.9)
+optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.01, momentum=0.9)
 
 # Decay LR by a factor of 0.1 every 7 epochs
-exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=12, gamma=0.5)
+exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=4, gamma=0.2)
 model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler,
                        num_epochs=24)
 torch.save(model_ft, 'resnet50.pth')
