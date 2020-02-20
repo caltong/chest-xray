@@ -72,9 +72,9 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 
         if epoch_acc > best_acc:
             best_acc = epoch_acc
-            best_model_wts = copy.deepcopy(model.state_dict)
+            best_model_wts = copy.deepcopy(model.state_dict())
 
-    print()
+        print()
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
@@ -84,18 +84,18 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     return model
 
 
-model_ft = get_model()
+model_ft = get_model('pretrained')
 
 # criterion = nn.CrossEntropyLoss()
 criterion = FocalLoss()
 
 # Observe that all parameters are being optimized
-optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.001, momentum=0.9, weight_decay=0.01)
+optimizer_ft = optim.SGD(model_ft.parameters(), lr=0.01, momentum=0.9, weight_decay=0.001)
 # optimizer_ft = optim.RMSprop(model_ft.parameters(), lr=0.01, momentum=0.9, alpha=0.99, eps=1e-8, centered=True,
 #                              weight_decay=1e-3)
 
 # Decay LR by a factor of 0.1 every 7 epochs
-exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=4, gamma=0.3)
+exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=8, gamma=0.3)
 model_ft = train_model(model_ft, criterion, optimizer_ft, exp_lr_scheduler,
-                       num_epochs=12)
+                       num_epochs=24)
 torch.save(model_ft, 'resnet50.pth')

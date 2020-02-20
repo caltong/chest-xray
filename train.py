@@ -15,6 +15,7 @@ import torch
 import torch.nn as nn
 
 from focal_loss import FocalLoss
+from model import get_model
 
 transform = {'train': transforms.Compose([LeftToRightFlip(0.5),
                                           RandomRotation(angle=3, p=0.5),
@@ -115,15 +116,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     return model
 
 
-model_ft = models.resnext101_32x8d(pretrained=True)
-num_ftrs = model_ft.fc.in_features
-# Here the size of each output sample is set to 2.
-# Alternatively, it can be generalized to nn.Linear(num_ftrs, len(class_names)).
-model_ft.fc = nn.Linear(num_ftrs, 4)
-
-# model_ft = model_ft.to(device)
-model_ft = nn.DataParallel(model_ft)  # 多卡训练
-model_ft = model_ft.cuda()
+model_ft = get_model('pretrained')
 
 # criterion = nn.CrossEntropyLoss()
 criterion = FocalLoss()
